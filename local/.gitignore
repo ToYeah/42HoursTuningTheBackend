@@ -1,2 +1,3 @@
 localMysql/sql/V0.sql
 localMysql/custom.conf
+docker-compose-local.yaml
