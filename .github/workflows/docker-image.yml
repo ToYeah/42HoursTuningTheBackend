@@ -15,4 +15,5 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: cd local && sh cpMysqlFile.sh && docker-compose -f docker-compose-local.yaml up && sh localApiTestOnly.sh
+      run: cd local && sh cpMysqlFile.sh && docker-compose -f docker-compose-local.yaml up
+          docker-compose exec -T app bash localApiTestOnly.sh
