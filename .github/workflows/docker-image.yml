@@ -1,0 +1,22 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: |
+           cd local
+           sh cpMysqlFile.sh
+           docker-compose -f docker-compose-local.yaml up -d
+           docker-compose exec -T app bash localApiTestOnly.sh
