@@ -218,7 +218,7 @@ const tomeActive = async (req, res) => {
   const [myGroupResult] = await pool.query(searchMyGroupQs, [user.user_id]);
 
   const targetCategoryAppGroupList = [];
-  const searchTargetQs = `select * from category_group where group_id = ?`;
+  const searchTargetQs = `select category_id,application_group from category_group where group_id = ?`;
 
   for (let i = 0; i < myGroupResult.length; i++) {
     const groupId = myGroupResult[i].group_id;
@@ -235,7 +235,7 @@ const tomeActive = async (req, res) => {
   }
 
   let searchRecordQs =
-    'select * from record where status = "open" and (category_id, application_group) in (';
+    'select record_id, created_by, application_group, updated_at, title, created_at  from record where status = "open" and (category_id, application_group) in (';
   let recordCountQs =
     'select count(*) from record where status = "open" and (category_id, application_group) in (';
   const param = [];
@@ -261,12 +261,12 @@ const tomeActive = async (req, res) => {
   const items = Array(recordResult.length);
   let count = 0;
 
-  const searchUserQs = 'select * from user where user_id = ? limit 1';
-  const searchGroupQs = 'select * from group_info where group_id = ? limit 1';
+  const searchUserQs = `select name from user where user_id = ? limit 1`;
+  const searchGroupQs = `select name from group_info where group_id = ? limit 1`;
   const searchThumbQs =
-    'select * from record_item_file where linked_record_id = ? order by item_id asc limit 1';
+    'select item_id from record_item_file where linked_record_id = ? order by item_id asc limit 1';
   const countQs = 'select count(*) from record_comment where linked_record_id = ? limit 1';
-  const searchLastQs = 'select * from record_last_access where user_id = ? and record_id = ? limit 1';
+  const searchLastQs = 'select access_time from record_last_access where user_id = ? and record_id = ? limit 1';
 
   for (let i = 0; i < recordResult.length; i++) {
     const resObj = {
@@ -364,19 +364,19 @@ const allActive = async (req, res) => {
     limit = 10;
   }
 
-  const searchRecordQs = `select * from record where status = "open" order by updated_at desc, record_id asc limit ? offset ?`;
+  const searchRecordQs = `select record_id, created_by, application_group, updated_at, title, created_at from record where status = "open" order by updated_at desc, record_id asc limit ? offset ?`;
 
   const [recordResult] = await pool.query(searchRecordQs, [limit, offset]);
 
   const items = Array(recordResult.length);
   let count = 0;
 
-  const searchUserQs = 'select * from user where user_id = ? limit 1';
-  const searchGroupQs = 'select * from group_info where group_id = ? limit 1';
+  const searchUserQs = 'select name from user where user_id = ? limit 1';
+  const searchGroupQs = 'select name from group_info where group_id = ? limit 1';
   const searchThumbQs =
-    'select * from record_item_file where linked_record_id = ? order by item_id asc limit 1';
+    'select item_id from record_item_file where linked_record_id = ? order by item_id asc limit 1';
   const countQs = 'select count(*) from record_comment where linked_record_id = ? limit 1';
-  const searchLastQs = 'select * from record_last_access where user_id = ? and record_id = ? limit 1';
+  const searchLastQs = 'select access_time from record_last_access where user_id = ? and record_id = ? limit 1';
 
   for (let i = 0; i < recordResult.length; i++) {
     const resObj = {
@@ -476,19 +476,19 @@ const allClosed = async (req, res) => {
     limit = 10;
   }
 
-  const searchRecordQs = `select * from record where status = "closed" order by updated_at desc, record_id asc limit ? offset ?`;
+  const searchRecordQs = `select record_id, created_by, application_group, updated_at, title, created_at from record where status = "closed" order by updated_at desc, record_id asc limit ? offset ?`;
 
   const [recordResult] = await pool.query(searchRecordQs, [limit, offset]);
 
   const items = Array(recordResult.length);
   let count = 0;
 
-  const searchUserQs = 'select * from user where user_id = ? limit 1';
-  const searchGroupQs = 'select * from group_info where group_id = ? limit 1';
+  const searchUserQs = `select name from user where user_id = ? limit 1`;
+  const searchGroupQs = `select name from group_info where group_id = ? limit 1`;
   const searchThumbQs =
-    'select * from record_item_file where linked_record_id = ? order by item_id asc limit 1';
+    'select item_id from record_item_file where linked_record_id = ? order by item_id asc limit 1';
   const countQs = 'select count(*) from record_comment where linked_record_id = ? limit 1';
-  const searchLastQs = 'select * from record_last_access where user_id = ? and record_id = ? limit 1';
+  const searchLastQs = 'select access_time from record_last_access where user_id = ? and record_id = ? limit 1';
 
   for (let i = 0; i < recordResult.length; i++) {
     const resObj = {
@@ -588,19 +588,19 @@ const mineActive = async (req, res) => {
     limit = 10;
   }
 
-  const searchRecordQs = `select * from record where created_by = ? and status = "open" order by updated_at desc, record_id asc limit ? offset ?`;
+  const searchRecordQs = `select record_id, created_by, application_group, updated_at, title, created_at from record where created_by = ? and status = "open" order by updated_at desc, record_id asc limit ? offset ?`;
 
   const [recordResult] = await pool.query(searchRecordQs, [user.user_id, limit, offset]);
 
   const items = Array(recordResult.length);
   let count = 0;
 
-  const searchUserQs = 'select * from user where user_id = ? limit 1';
-  const searchGroupQs = 'select * from group_info where group_id = ? limit 1';
+  const searchUserQs = `select name from user where user_id = ? limit 1`;
+  const searchGroupQs = `select name from group_info where group_id = ? limit 1`;
   const searchThumbQs =
-    'select * from record_item_file where linked_record_id = ? order by item_id asc limit 1';
+    'select item_id from record_item_file where linked_record_id = ? order by item_id asc limit 1';
   const countQs = 'select count(*) from record_comment where linked_record_id = ? limit 1';
-  const searchLastQs = 'select * from record_last_access where user_id = ? and record_id = ? limit 1';
+  const searchLastQs = 'select access_time from record_last_access where user_id = ? and record_id = ? limit 1';
 
   for (let i = 0; i < recordResult.length; i++) {
     const resObj = {
@@ -722,8 +722,8 @@ const getComments = async (req, res) => {
   const commentList = Array(commentResult.length);
 
   const searchPrimaryGroupQs = `select * from group_member where user_id = ? and is_primary = true limit 1`;
-  const searchUserQs = `select * from user where user_id = ? limit 1`;
-  const searchGroupQs = `select * from group_info where group_id = ? limit 1`;
+  const searchUserQs = `select name from user where user_id = ? limit 1`;
+  const searchGroupQs = `select name from group_info where group_id = ? limit 1`;
   for (let i = 0; i < commentResult.length; i++) {
     let commentInfo = {
       commentId: '',
