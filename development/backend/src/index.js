@@ -1,7 +1,11 @@
 const express = require('express')
 const app = express();
+const cluster = require('cluster');
+const numCpus = require('os').cpus().length;
+const compression = require('compression');
 
-app.use(express.json({limit: '10mb'}))
+app.use(compression();
+app.use(express.json({limit: '10mb'}));
 
 const api = require("./api");
 
@@ -127,6 +131,6 @@ app.get('/api/client/records/:recordId/files/:itemId/thumbnail', async (req, res
   }
 })
 
-
-app.listen(8000, () => console.log('listening on port 8000...'))
+app.listen(8000, () => console.log('listening on port 8000..'));
+// cluster.schedulingPolicy = cluster.SCHED_NONE; // windowsの場合
 
