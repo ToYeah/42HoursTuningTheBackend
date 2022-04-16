@@ -2,10 +2,10 @@ const express = require('express')
 const app = express();
 const cluster = require('cluster');
 const numCpus = require('os').cpus().length;
-// const compression = require('compression');
+const compression = require('compression');
 
+app.use(compression());
 app.use(express.json({limit: '10mb'}));
-// app.use(compression(express.json()));
 const api = require("./api");
 
 app.get('/api/hello', (req, res) => {
