@@ -26,3 +26,4 @@ services:
         MYSQL_DATABASE: "app"
         MYSQL_USER: "backend"
         MYSQL_PASSWORD : "backend"
+      platform: linux/amd64
