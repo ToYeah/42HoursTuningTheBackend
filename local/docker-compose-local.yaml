@@ -26,4 +26,6 @@ services:
         MYSQL_DATABASE: "app"
         MYSQL_USER: "backend"
         MYSQL_PASSWORD : "backend"
+      volumes:
+        -  ./localMysql/scripts:/docker-entrypoint-initdb.d
       platform: linux/amd64
