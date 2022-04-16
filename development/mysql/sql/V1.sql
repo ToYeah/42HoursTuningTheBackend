@@ -18,4 +18,4 @@ ALTER TABLE record_comment ADD INDEX (linked_record_id);
 
 ALTER TABLE record_last_access ADD INDEX (user_id);
 
-ALTER TABLE record ADD INDEX (record_id, created_by, status);
+ALTER TABLE record ADD INDEX (status, updated_at DESC, record_id ASC);
