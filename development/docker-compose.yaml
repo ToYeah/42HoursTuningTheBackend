@@ -29,6 +29,10 @@ services:
       build:
         context: ./mysql
         dockerfile: Dockerfile
+      command: |
+        source /usr/share/mysql/innodb_memcached_config.sql
+        INSTALL PLUGIN daemon_memcached soname "libmemcached.so";
+
       environment:
         MYSQL_ALLOW_EMPTY_PASSWORD: 1
         MYSQL_DATABASE: "app"
