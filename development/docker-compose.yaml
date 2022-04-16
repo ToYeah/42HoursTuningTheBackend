@@ -36,5 +36,5 @@ services:
         MYSQL_PASSWORD : "backend"
       volumes:
         - ../volume/mysql:/var/lib/mysql
-        -  ./localMysql/scripts:/docker-entrypoint-initdb.d
+        -  ./mysql/scripts:/docker-entrypoint-initdb.d
         - /root/42HoursTuningTheBackend/development/log:/var/log/mysql/own/
