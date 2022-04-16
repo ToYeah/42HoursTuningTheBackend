@@ -1,9 +1,19 @@
-alter table session add index (value);
+ALTER TABLE session ADD INDEX (value);
 
-alter table record add index (record_id);
+ALTER TABLE group_member ADD INDEX (user_id);
 
-alter table group_member add index (user_id);
+ALTER TABLE user ADD INDEX (user_id);
 
-alter table user add index (user_id);
+ALTER TABLE group_info ADD INDEX (group_id);
 
-alter table group_info add index (group_id);
+ALTER TABLE category ADD INDEX (category_id);
+
+ALTER TABLE record_item_file ADD INDEX (linked_record_id);
+
+ALTER TABLE file ADD INDEX (file_id);
+
+ALTER TABLE category_group ADD INDEX (group_id);
+
+ALTER TABLE record_comment ADD INDEX (linked_record_id);
+
+ALTER TABLE record_last_access ADD INDEX (user_id);
