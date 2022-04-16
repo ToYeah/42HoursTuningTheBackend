@@ -17,3 +17,5 @@ ALTER TABLE category_group ADD INDEX (group_id);
 ALTER TABLE record_comment ADD INDEX (linked_record_id);
 
 ALTER TABLE record_last_access ADD INDEX (user_id);
+
+ALTER TABLE record ADD INDEX (record_id, created_by, status);
