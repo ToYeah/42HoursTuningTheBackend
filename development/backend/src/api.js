@@ -202,8 +202,8 @@ const normalizeRecord = (records) => {
   for (let i = 0; i < records.length; i++) {
 
     records[i].isUnConfirmed = true;
-    if (records[0].accessTime && Date.parse(records[i].updated_at) <= Date.parse(records[0].accessTime)) {
-      records[0].isUnConfirmed = false;
+    if (records[i].accessTime && Date.parse(records[i].updated_at) <= Date.parse(records[i].accessTime)) {
+      records[i].isUnConfirmed = false;
     }
     delete records[i].accessTime;
 
@@ -245,136 +245,40 @@ const tomeActive = async (req, res) => {
     limit = 1;
   }
 
-  const searchMyGroupQs = `select group_id from group_member where user_id = ?`;
-  const [myGroupResult] = await pool.query(searchMyGroupQs, [user.user_id]);
+  const recordCountQs = `
+  SELECT count(*) \
+  FROM record \
+  WHERE status = "open" \
+  AND (category_id, application_group) in (select category_id, application_group  from category_group where group_id IN (select group_id from group_member where user_id = ?)) \
+  LIMIT 1;`;
 
-  const targetCategoryAppGroupList = [];
-  const searchTargetQs = `select category_id,application_group from category_group where group_id = ?`;
-
-  for (let i = 0; i < myGroupResult.length; i++) {
-    const groupId = myGroupResult[i].group_id;
-
-    const [targetResult] = await pool.query(searchTargetQs, [groupId]);
-    for (let j = 0; j < targetResult.length; j++) {
-      const targetLine = targetResult[j];
-
-      targetCategoryAppGroupList.push({
-        categoryId: targetLine.category_id,
-        applicationGroup: targetLine.application_group,
-      });
-    }
-  }
-
-  let searchRecordQs =
-    'select record_id, created_by, application_group, updated_at, title, created_at  from record where status = "open" and (category_id, application_group) in (';
-  let recordCountQs =
-    'select count(*) from record where status = "open" and (category_id, application_group) in (';
-  const param = [];
-
-  for (let i = 0; i < targetCategoryAppGroupList.length; i++) {
-    if (i !== 0) {
-      searchRecordQs += ', (?, ?)';
-      recordCountQs += ', (?, ?)';
-    } else {
-      searchRecordQs += ' (?, ?)';
-      recordCountQs += ' (?, ?)';
-    }
-    param.push(targetCategoryAppGroupList[i].categoryId);
-    param.push(targetCategoryAppGroupList[i].applicationGroup);
-  }
-  searchRecordQs += ' ) order by updated_at desc, record_id  limit ? offset ?';
-  recordCountQs += ' )';
-  param.push(limit);
-  param.push(offset);
-
-  const [recordResult] = await pool.query(searchRecordQs, param);
-
-  const items = Array(recordResult.length);
-  let count = 0;
-
-  const searchUserQs = `select name from user where user_id = ? limit 1`;
-  const searchGroupQs = `select name from group_info where group_id = ? limit 1`;
-  const searchThumbQs =
-    'select item_id from record_item_file where linked_record_id = ? order by item_id asc limit 1';
-  const countQs = 'select count(*) from record_comment where linked_record_id = ? limit 1';
-  const searchLastQs = 'select access_time from record_last_access where user_id = ? and record_id = ? limit 1';
-
-  for (let i = 0; i < recordResult.length; i++) {
-    const resObj = {
-      recordId: null,
-      title: '',
-      applicationGroup: null,
-      applicationGroupName: null,
-      createdBy: null,
-      createdByName: null,
-      createAt: '',
-      commentCount: 0,
-      isUnConfirmed: true,
-      thumbNailItemId: null,
-      updatedAt: '',
-    };
-
-    const line = recordResult[i];
-    const recordId = recordResult[i].record_id;
-    const createdBy = line.created_by;
-    const applicationGroup = line.application_group;
-    const updatedAt = line.updated_at;
-    let createdByName = null;
-    let applicationGroupName = null;
-    let thumbNailItemId = null;
-    let commentCount = 0;
-    let isUnConfirmed = true;
-
-    const [userResult] = await pool.query(searchUserQs, [createdBy]);
-    if (userResult.length === 1) {
-      createdByName = userResult[0].name;
-    }
-
-    const [groupResult] = await pool.query(searchGroupQs, [applicationGroup]);
-    if (groupResult.length === 1) {
-      applicationGroupName = groupResult[0].name;
-    }
-
-    const [itemResult] = await pool.query(searchThumbQs, [recordId]);
-    if (itemResult.length === 1) {
-      thumbNailItemId = itemResult[0].item_id;
-    }
-
-    const [countResult] = await pool.query(countQs, [recordId]);
-    if (countResult.length === 1) {
-      commentCount = countResult[0]['count(*)'];
-    }
-
-    const [lastResult] = await pool.query(searchLastQs, [user.user_id, recordId]);
-    if (lastResult.length === 1) {
-      const updatedAtNum = Date.parse(updatedAt);
-      const accessTimeNum = Date.parse(lastResult[0].access_time);
-      if (updatedAtNum <= accessTimeNum) {
-        isUnConfirmed = false;
-      }
-    }
-
-    resObj.recordId = recordId;
-    resObj.title = line.title;
-    resObj.applicationGroup = applicationGroup;
-    resObj.applicationGroupName = applicationGroupName;
-    resObj.createdBy = createdBy;
-    resObj.createdByName = createdByName;
-    resObj.createAt = line.created_at;
-    resObj.commentCount = commentCount;
-    resObj.isUnConfirmed = isUnConfirmed;
-    resObj.thumbNailItemId = thumbNailItemId;
-    resObj.updatedAt = updatedAt;
-
-    items[i] = resObj;
-  }
-
-  const [recordCountResult] = await pool.query(recordCountQs, param);
+  const [recordCountResult] = await pool.query(recordCountQs, [user.user_id]);
   if (recordCountResult.length === 1) {
     count = recordCountResult[0]['count(*)'];
   }
 
-  res.send({ count: count, items: items });
+  const searchRecordQs = `
+  SELECT \
+  R.record_id AS recordId, \
+  R.title AS title, \
+  R.application_group AS applicationGroup, \
+  (SELECT name FROM group_info AS GI WHERE GI.group_id = R.application_group) AS applicationGroupName, \
+  R.created_by AS createdBy, \
+  (SELECT name FROM user AS U WHERE R.created_by = U.user_id) AS createdByName, \
+  R.created_at AS createAt, \
+  (SELECT count(*) FROM record_comment AS RC WHERE RC.linked_record_id = R.record_id) AS commentCount, \
+  (SELECT item_id FROM record_item_file AS RIF WHERE RIF.linked_record_id = R.record_id limit 1) AS thumbNailItemId, \
+  (SELECT access_time FROM record_last_access AS RLA WHERE RLA.user_id = ? AND RLA.record_id = R.record_id LIMIT 1) AS accessTime, \
+  R.updated_at \
+  FROM record AS R \
+  WHERE status = "open" \
+  AND (category_id, application_group) in (select category_id, application_group  from category_group where group_id IN (select group_id from group_member where user_id = ?)) \
+  ORDER BY R.updated_at DESC, R.record_id ASC \
+  LIMIT ? OFFSET ?;`;
+
+  const [recordResult] = await pool.query(searchRecordQs, [user.user_id, user.user_id, limit, offset]);
+
+  res.send({ count: count, items: normalizeRecord(recordResult) });
 };
 
 // GET /record-views/allActive
