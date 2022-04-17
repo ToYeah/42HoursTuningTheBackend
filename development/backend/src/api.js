@@ -892,7 +892,7 @@ const getRecordItemFileThumbnail = async (req, res) => {
 
   const data = fs.readFileSync(fileInfo.path);
 
-  res.send({ data: base64, name: fileInfo.name });
+  res.send({ data: data, name: fileInfo.name });
 };
 
 module.exports = {
