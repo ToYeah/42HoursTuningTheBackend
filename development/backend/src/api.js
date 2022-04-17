@@ -5,6 +5,8 @@ const jimp = require('jimp');
 
 const mysql = require('mysql2/promise');
 
+var zlib = require('zlib');
+
 
 // MEMO: 設定項目はここを参考にした
 // https://github.com/sidorares/node-mysql2#api-and-configuration
@@ -792,16 +794,20 @@ const postFiles = async (req, res) => {
   const newId = uuidv4();
   const newThumbId = uuidv4();
 
-  const binary = Buffer.from(base64Data, 'base64');
+  zlib.gzip(base64Data, function (err, binary) {
+    fs.writeFileSync(`${filePath}${newId}_${name}`, binary);
+});
 
-  fs.writeFileSync(`${filePath}${newId}_${name}`, binary);
+  const image = await jimp.read(Buffer.from(base64Data, 'base64'));
 
-  const image = await jimp.read(fs.readFileSync(`${filePath}${newId}_${name}`));
-
-  const size = image.bitmap.width < image.bitmap.height ? image.bitmap.width : image.bitmap.height;
+  const size = await image.bitmap.width < image.bitmap.height ? image.bitmap.width : image.bitmap.height;
   await image.cover(size, size);
 
-  await image.writeAsync(`${filePath}${newThumbId}_thumb_${name}`);
+  await　image.getBase64(jimp.AUTO, (err, res) => {
+    zlib.gzip(res, function (err, binary) {
+    fs.writeFileSync(`${filePath}${newThumbId}_thumb_${name}`, binary);
+  })
+});
 
   await pool.query(
     `insert into file (file_id, path, name)
@@ -838,7 +844,7 @@ const getRecordItemFile = async (req, res) => {
     and
     r.item_id = ?
     and
-    r.linked_file_id = f.file_id`,
+    r.linked_file_id = f.file_id limit 1`,
     [`${recordId}`, `${itemId}`],
   );
 
@@ -849,9 +855,8 @@ const getRecordItemFile = async (req, res) => {
   const fileInfo = rows[0];
 
   const data = fs.readFileSync(fileInfo.path);
-  const base64 = data.toString('base64');
 
-  res.send({ data: base64, name: fileInfo.name });
+  res.send({ data: data, name: fileInfo.name });
 };
 
 // GET records/{recordId}/files/{itemId}/thumbnail
@@ -875,7 +880,7 @@ const getRecordItemFileThumbnail = async (req, res) => {
     and
     r.item_id = ?
     and
-    r.linked_thumbnail_file_id = f.file_id`,
+    r.linked_thumbnail_file_id = f.file_id limit 1`,
     [`${recordId}`, `${itemId}`],
   );
 
@@ -886,7 +891,6 @@ const getRecordItemFileThumbnail = async (req, res) => {
   const fileInfo = rows[0];
 
   const data = fs.readFileSync(fileInfo.path);
-  const base64 = data.toString('base64');
 
   res.send({ data: base64, name: fileInfo.name });
 };
