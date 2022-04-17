@@ -794,9 +794,9 @@ const postFiles = async (req, res) => {
   const newId = uuidv4();
   const newThumbId = uuidv4();
 
-  zlib.gzip(base64Data, function (err, binary) {
+  // zlib.gzip(base64Data, function (err, binary) {
     fs.writeFileSync(`${filePath}${newId}_${name}`, binary);
-});
+// });
 
   const image = await jimp.read(Buffer.from(base64Data, 'base64'));
 
@@ -804,9 +804,7 @@ const postFiles = async (req, res) => {
   await image.cover(size, size);
 
   await　image.getBase64(jimp.AUTO, (err, res) => {
-    zlib.gzip(res, function (err, binary) {
     fs.writeFileSync(`${filePath}${newThumbId}_thumb_${name}`, binary);
-  })
 });
 
   await pool.query(
