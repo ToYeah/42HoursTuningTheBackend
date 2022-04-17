@@ -5,6 +5,8 @@ const jimp = require('jimp');
 
 const mysql = require('mysql2/promise');
 
+var zlib = require('zlib');
+
 
 // MEMO: 設定項目はここを参考にした
 // https://github.com/sidorares/node-mysql2#api-and-configuration
@@ -755,17 +757,19 @@ const postFiles = async (req, res) => {
 
   const newId = uuidv4();
   const newThumbId = uuidv4();
+  // console.log(base64Data);
+  fs.writeFileSync(`${filePath}${newId}_${name}`, base64Data);
 
-  const binary = Buffer.from(base64Data, 'base64');
+  const image = await jimp.read(Buffer.from(base64Data, 'base64'));
 
-  fs.writeFileSync(`${filePath}${newId}_${name}`, binary);
-
-  const image = await jimp.read(fs.readFileSync(`${filePath}${newId}_${name}`));
-
-  const size = image.bitmap.width < image.bitmap.height ? image.bitmap.width : image.bitmap.height;
+  const size = await image.bitmap.width < image.bitmap.height ? image.bitmap.width : image.bitmap.height;
   await image.cover(size, size);
 
-  await image.writeAsync(`${filePath}${newThumbId}_thumb_${name}`);
+  await　image.getBase64(jimp.AUTO, (err, res) => {
+      let result = res.replace(/^data:\w+\/\w+;base64,/, '');
+      console.log(result, 1);
+    fs.writeFileSync(`${filePath}${newThumbId}_thumb_${name}`, result);
+});
 
   await pool.query(
     `insert into file (file_id, path, name)
@@ -802,7 +806,7 @@ const getRecordItemFile = async (req, res) => {
     and
     r.item_id = ?
     and
-    r.linked_file_id = f.file_id`,
+    r.linked_file_id = f.file_id limit 1`,
     [`${recordId}`, `${itemId}`],
   );
 
@@ -814,7 +818,6 @@ const getRecordItemFile = async (req, res) => {
 
   const data = fs.readFileSync(fileInfo.path);
   const base64 = data.toString('base64');
-
   res.send({ data: base64, name: fileInfo.name });
 };
 
@@ -839,7 +842,7 @@ const getRecordItemFileThumbnail = async (req, res) => {
     and
     r.item_id = ?
     and
-    r.linked_thumbnail_file_id = f.file_id`,
+    r.linked_thumbnail_file_id = f.file_id limit 1`,
     [`${recordId}`, `${itemId}`],
   );
 
@@ -851,7 +854,6 @@ const getRecordItemFileThumbnail = async (req, res) => {
 
   const data = fs.readFileSync(fileInfo.path);
   const base64 = data.toString('base64');
-
   res.send({ data: base64, name: fileInfo.name });
 };
 

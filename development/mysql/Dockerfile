@@ -6,4 +6,4 @@ RUN mkdir -p /var/log/mysql/own/
 RUN touch /var/log/mysql/own/slow.log
 RUN chmod 777 /var/log/mysql/own/slow.log
 
-CMD ["mysqld"]
+CMD ["mysqld", "--max_connections=5000"]
