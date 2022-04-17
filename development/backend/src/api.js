@@ -854,7 +854,6 @@ const getRecordItemFile = async (req, res) => {
 
   const data = fs.readFileSync(fileInfo.path);
   const base64 = data.toString('base64');
-  // console.log(base64, 4);
   res.send({ data: base64, name: fileInfo.name });
 };
 
@@ -891,7 +890,6 @@ const getRecordItemFileThumbnail = async (req, res) => {
 
   const data = fs.readFileSync(fileInfo.path);
   const base64 = data.toString('base64');
-  // console.log(base64, 3);
   res.send({ data: base64, name: fileInfo.name });
 };
 
