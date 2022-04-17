@@ -793,10 +793,8 @@ const postFiles = async (req, res) => {
 
   const newId = uuidv4();
   const newThumbId = uuidv4();
-
-  // zlib.gzip(base64Data, function (err, binary) {
-    fs.writeFileSync(`${filePath}${newId}_${name}`, binary);
-// });
+  // console.log(base64Data);
+  fs.writeFileSync(`${filePath}${newId}_${name}`, base64Data);
 
   const image = await jimp.read(Buffer.from(base64Data, 'base64'));
 
@@ -804,7 +802,9 @@ const postFiles = async (req, res) => {
   await image.cover(size, size);
 
   await　image.getBase64(jimp.AUTO, (err, res) => {
-    fs.writeFileSync(`${filePath}${newThumbId}_thumb_${name}`, binary);
+      let result = res.replace(/^data:\w+\/\w+;base64,/, '');
+      console.log(result, 1);
+    fs.writeFileSync(`${filePath}${newThumbId}_thumb_${name}`, result);
 });
 
   await pool.query(
@@ -853,8 +853,9 @@ const getRecordItemFile = async (req, res) => {
   const fileInfo = rows[0];
 
   const data = fs.readFileSync(fileInfo.path);
-
-  res.send({ data: data, name: fileInfo.name });
+  const base64 = data.toString('base64');
+  // console.log(base64, 4);
+  res.send({ data: base64, name: fileInfo.name });
 };
 
 // GET records/{recordId}/files/{itemId}/thumbnail
@@ -889,8 +890,9 @@ const getRecordItemFileThumbnail = async (req, res) => {
   const fileInfo = rows[0];
 
   const data = fs.readFileSync(fileInfo.path);
-
-  res.send({ data: data, name: fileInfo.name });
+  const base64 = data.toString('base64');
+  // console.log(base64, 3);
+  res.send({ data: base64, name: fileInfo.name });
 };
 
 module.exports = {
